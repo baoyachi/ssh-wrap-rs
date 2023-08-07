@@ -1,22 +1,32 @@
 [package]
-name = "ssh-wrap-rs"
+name = "ssh-wrap"
 version = "0.1.0"
+authors = ["baoyachi <liaoymxsdl@gmail.com>"]
 edition = "2021"
+description = "ssh wrap"
+keywords = ["ssh", "sftp", "sftp-server"]
+readme = "README.md"
+repository = "https://github.com/baoyachi/ssh-wrap-rs"
+documentation = "https://docs.rs/ssh-wrap-rs"
+homepage = "https://github.com/baoyachi/ssh-wrap-rs"
+license = "MIT OR Apache-2.0"
 
 
-[[bin]]
+[[example]]
 name = "use_wezterm_ssh"
-path = "bin/use_wezterm_ssh.rs"
+path = "examples/use_wezterm_ssh.rs"
 
 [dependencies]
-tokio = { version = "1.29", features = ["full"] }
 wezterm-ssh = { version = "0.4.0" }
-simple-log = "1.6.0"
-sha256 = "1.3.0"
-lazy_static = "1.4.0"
 anyhow = "1.0.71"
 async-compat = "0.2.1"
 futures-lite = "1.13.0"
 strum = { version = "0.25.0" }
 strum_macros = "0.24.3"
 log = "0.4.18"
+
+[dev-dependencies]
+tokio = { version = "1.29", features = ["full"] }
+simple-log = "1.6.0"
+sha256 = "1.3.0"
+lazy_static = "1.4.0"

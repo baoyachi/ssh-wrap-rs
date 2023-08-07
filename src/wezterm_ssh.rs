@@ -24,6 +24,24 @@ pub enum SshBackend {
 }
 
 impl SessionBuilder {
+    pub fn new_with_pass<U, H, P>(user: U, host: H, pass: P, port: u16) -> Self
+    where
+        U: AsRef<str>,
+        H: AsRef<str>,
+        P: AsRef<str>,
+    {
+        Self {
+            user: user.as_ref().to_string(),
+            host: host.as_ref().to_string(),
+            pass: pass.as_ref().to_string(),
+            port,
+            identities_only: None,
+            userknown_hosts_file: None,
+            wezterm_ssh_verbose: None,
+            wezterm_ssh_backend: Default::default(),
+        }
+    }
+
     fn identities_only(&self) -> &str {
         if let Some(i) = self.identities_only {
             if i {
@@ -31,6 +49,11 @@ impl SessionBuilder {
             }
         }
         "no"
+    }
+
+    pub fn disable_userknown_hosts_file(&mut self) -> &mut Self {
+        self.userknown_hosts_file = Some("/dev/null".to_string());
+        self
     }
 
     fn wezterm_ssh_verbose(&self) -> &str {
@@ -67,7 +90,7 @@ impl SessionBuilder {
         config
     }
 
-    pub async fn connect(&self) -> anyhow::Result<Session> {
+    pub async fn connect_with_pass(&self) -> anyhow::Result<Session> {
         let (session, events) = Session::connect(self.configmap())?;
         while let Ok(event) = events.recv().await {
             match event {

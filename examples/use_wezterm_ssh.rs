@@ -2,7 +2,7 @@ use async_compat::CompatExt;
 use futures_lite::io::AsyncWriteExt;
 use lazy_static::lazy_static;
 use simple_log::info;
-use ssh_wrap_rs::wezterm_ssh::SessionBuilder;
+use ssh_wrap::wezterm_ssh::SessionBuilder;
 use std::time::Instant;
 use tokio::task;
 use wezterm_ssh::Sftp;
@@ -21,18 +21,11 @@ async fn main() -> anyhow::Result<()> {
     let _ = std::fs::remove_dir_all("./tmp/sftp/");
     std::fs::create_dir_all("./tmp/sftp/").unwrap();
 
-    let builder = SessionBuilder {
-        user: "foo".to_string(),
-        host: "0.0.0.0".to_string(),
-        pass: "123456".to_string(),
-        port: 2222,
-        identities_only: None,
-        userknown_hosts_file: Some("/dev/null".to_string()),
-        wezterm_ssh_verbose: None,
-        wezterm_ssh_backend: Default::default(),
-    };
-
-    let session = builder.connect().await.unwrap();
+    let session = SessionBuilder::new_with_pass("foo", "0.0.0.0", "123456", 2222)
+        .disable_userknown_hosts_file()
+        .connect_with_pass()
+        .await
+        .unwrap();
 
     let sftp = session.sftp();
 
@@ -49,7 +42,7 @@ async fn main() -> anyhow::Result<()> {
 
     let real_digest = sha256::digest(&*FOO);
 
-    let entries = std::fs::read_dir("./tmp/sftp")?;
+    let entries = std::fs::read_dir("../tmp/sftp")?;
 
     let mut number = 0;
 
