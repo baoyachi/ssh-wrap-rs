@@ -2,17 +2,17 @@ use async_compat::CompatExt;
 use futures_lite::io::AsyncWriteExt;
 use lazy_static::lazy_static;
 use simple_log::info;
-use simple_log::log::warn;
+use ssh_wrap_rs::wezterm_ssh::SessionBuilder;
 use std::time::Instant;
 use tokio::task;
-use wezterm_ssh::{Config, Session, SessionEvent, Sftp};
+use wezterm_ssh::Sftp;
 
 lazy_static! {
     static ref FOO: String = std::fs::read_to_string("./rand_data.dat").unwrap();
 }
 
-const TASK_NUM: usize = 60;
-const SINGLE_TASK_FILE: usize = 10;
+const TASK_NUM: usize = 300;
+const SINGLE_TASK_FILE: usize = 2;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -21,43 +21,18 @@ async fn main() -> anyhow::Result<()> {
     let _ = std::fs::remove_dir_all("./tmp/sftp/");
     std::fs::create_dir_all("./tmp/sftp/").unwrap();
 
-    let config = Config::new();
-    let mut config = config.for_host("0.0.0.0");
-    config.insert("port".to_string(), "2222".to_string());
-    config.insert("user".to_string(), "foo".to_string());
-    config.insert("identitiesonly".to_string(), "no".to_string());
-    config.insert("wezterm_ssh_verbose".to_string(), "false".to_string());
-    config.insert("wezterm_ssh_backend".to_string(), "ssh2".to_string());
+    let builder = SessionBuilder {
+        user: "foo".to_string(),
+        host: "0.0.0.0".to_string(),
+        pass: "123456".to_string(),
+        port: 2222,
+        identities_only: None,
+        userknown_hosts_file: Some("/dev/null".to_string()),
+        wezterm_ssh_verbose: None,
+        wezterm_ssh_backend: Default::default(),
+    };
 
-    let (session, events) = Session::connect(config).unwrap();
-
-    tokio::spawn(async move {
-        while let Ok(event) = events.recv().await {
-            match event {
-                SessionEvent::Banner(banner) => {
-                    info!("ssh banner: {banner:?}");
-                }
-                SessionEvent::HostVerify(verify) => {
-                    info!("[local] on_verify_host({:?})", verify);
-                    verify.answer(true).compat().await.unwrap();
-                }
-                SessionEvent::Authenticate(auth) => {
-                    info!("Authenticate:{:?}", auth);
-                    auth.answer(vec!["123456".to_string()])
-                        .compat()
-                        .await
-                        .unwrap();
-                }
-                SessionEvent::Error(err) => {
-                    warn!("[local] on_error({err})");
-                }
-                SessionEvent::Authenticated => {
-                    warn!("ssh authenticated");
-                    break;
-                }
-            }
-        }
-    });
+    let session = builder.connect().await.unwrap();
 
     let sftp = session.sftp();
 

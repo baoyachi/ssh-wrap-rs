@@ -1,11 +1,11 @@
 [package]
-name = "ssh-bench-rs"
+name = "ssh-wrap-rs"
 version = "0.1.0"
 edition = "2021"
 
 
 [[bin]]
-name ="use_wezterm_ssh"
+name = "use_wezterm_ssh"
 path = "bin/use_wezterm_ssh.rs"
 
 [dependencies]
@@ -17,3 +17,6 @@ lazy_static = "1.4.0"
 anyhow = "1.0.71"
 async-compat = "0.2.1"
 futures-lite = "1.13.0"
+strum = { version = "0.25.0" }
+strum_macros = "0.24.3"
+log = "0.4.18"
