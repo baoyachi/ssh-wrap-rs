@@ -1,0 +1,19 @@
+[package]
+name = "ssh-bench-rs"
+version = "0.1.0"
+edition = "2021"
+
+
+[[bin]]
+name ="use_wezterm_ssh"
+path = "bin/use_wezterm_ssh.rs"
+
+[dependencies]
+tokio = { version = "1.29", features = ["full"] }
+wezterm-ssh = { version = "0.4.0" }
+simple-log = "1.6.0"
+sha256 = "1.3.0"
+lazy_static = "1.4.0"
+anyhow = "1.0.71"
+async-compat = "0.2.1"
+futures-lite = "1.13.0"

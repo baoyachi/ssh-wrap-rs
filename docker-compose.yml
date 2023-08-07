@@ -1,0 +1,10 @@
+version: '3'
+services:
+  sftp:
+    image: atmoz/sftp
+    ports:
+      - "2222:22"
+    volumes:
+      - ./tmp/sftp:/home/foo/sftp_upload/
+    environment:
+      - SFTP_USERS=foo:123456:1001
