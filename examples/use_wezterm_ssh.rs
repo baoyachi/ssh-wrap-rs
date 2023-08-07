@@ -1,17 +1,26 @@
 use async_compat::CompatExt;
 use futures_lite::io::AsyncWriteExt;
 use lazy_static::lazy_static;
+use rand::distributions::Alphanumeric;
+use rand::thread_rng;
+use rand::Rng;
 use simple_log::info;
 use ssh_wrap::wezterm_ssh::SessionBuilder;
 use std::time::Instant;
 use tokio::task;
 use wezterm_ssh::Sftp;
 
+const FILE_SIZE: usize = 1024 * 512;
+
 lazy_static! {
-    static ref FOO: String = std::fs::read_to_string("./rand_data.dat").unwrap();
+    static ref FOO: String = thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(FILE_SIZE)
+        .map(char::from)
+        .collect();
 }
 
-const TASK_NUM: usize = 300;
+const TASK_NUM: usize = 100;
 const SINGLE_TASK_FILE: usize = 2;
 
 #[tokio::main]
@@ -42,7 +51,7 @@ async fn main() -> anyhow::Result<()> {
 
     let real_digest = sha256::digest(&*FOO);
 
-    let entries = std::fs::read_dir("../tmp/sftp")?;
+    let entries = std::fs::read_dir("./tmp/sftp").unwrap();
 
     let mut number = 0;
 
