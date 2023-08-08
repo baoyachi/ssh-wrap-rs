@@ -1,6 +1,6 @@
 [package]
 name = "ssh-wrap"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["baoyachi <liaoymxsdl@gmail.com>"]
 edition = "2021"
 description = "ssh wrap"
@@ -16,8 +16,13 @@ license = "MIT OR Apache-2.0"
 name = "use_wezterm_ssh"
 path = "examples/use_wezterm_ssh.rs"
 
+[features]
+default = ["ssh2"]
+libssh = ["wezterm-ssh/libssh-rs", "wezterm-ssh/vendored-openssl-libssh-rs"]
+ssh2 = ["wezterm-ssh/ssh2", "wezterm-ssh/vendored-openssl-ssh2"]
+
 [dependencies]
-wezterm-ssh = { version = "0.4.0" }
+wezterm-ssh = { version = "0.4.0", default-features = false }
 anyhow = "1.0.71"
 async-compat = "0.2.1"
 futures-lite = "1.13.0"
