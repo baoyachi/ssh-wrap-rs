@@ -1,5 +1,6 @@
 use async_compat::CompatExt;
 use futures_lite::io::AsyncWriteExt;
+use futures_lite::AsyncReadExt;
 use lazy_static::lazy_static;
 use rand::distributions::Alphanumeric;
 use rand::thread_rng;
@@ -8,7 +9,7 @@ use simple_log::info;
 use ssh_wrap::wezterm_ssh::SessionBuilder;
 use std::time::Instant;
 use tokio::task;
-use wezterm_ssh::Sftp;
+use wezterm_ssh::{Sftp, Utf8PathBuf};
 
 const FILE_SIZE: usize = 1024 * 512;
 
@@ -20,7 +21,7 @@ lazy_static! {
         .collect();
 }
 
-const TASK_NUM: usize = 100;
+const TASK_NUM: usize = 10;
 const SINGLE_TASK_FILE: usize = 2;
 
 #[tokio::main]
@@ -47,14 +48,31 @@ async fn main() -> anyhow::Result<()> {
     for handle in vec {
         handle.await.unwrap()
     }
-    info!("{:?}", now.elapsed());
+    info!("write all file finished {:?}", now.elapsed());
 
     let real_digest = sha256::digest(&*FOO);
+
+    let entrys = sftp.read_dir("/sftp_upload/").await.unwrap();
+    let now = Instant::now();
+
+    let mut vec = vec![];
+    for (path, _) in entrys {
+        let handle = task::spawn(read(sftp.clone(), path));
+        vec.push(handle);
+    }
+
+    assert_eq!(vec.len(), TASK_NUM * SINGLE_TASK_FILE);
+    for handle in vec {
+        assert_eq!(real_digest, sha256::digest(handle.await.unwrap()))
+    }
+
+    info!("read all file finished {:?}", now.elapsed());
 
     let entries = std::fs::read_dir("./tmp/sftp").unwrap();
 
     let mut number = 0;
 
+    let now = Instant::now();
     for entry in entries {
         let entry = entry?;
         let file_name = entry.file_name();
@@ -69,6 +87,7 @@ async fn main() -> anyhow::Result<()> {
     }
 
     assert_eq!(number, TASK_NUM * SINGLE_TASK_FILE);
+    info!("read local files finished {:?}", now.elapsed());
 
     Ok(())
 }
@@ -88,4 +107,11 @@ async fn write(sftp: Sftp, task_index: usize) {
         file.flush().await.unwrap();
         info!("end drop file,file_id: {},file_name:{}", file_id, file_name);
     }
+}
+
+async fn read(sftp: Sftp, path: Utf8PathBuf) -> Vec<u8> {
+    let mut file = sftp.open(path).await.unwrap();
+    let mut contents = Vec::with_capacity(10);
+    file.read_to_end(&mut contents).await.unwrap();
+    contents
 }
