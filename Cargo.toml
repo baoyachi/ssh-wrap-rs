@@ -27,7 +27,7 @@ anyhow = "1.0.71"
 async-compat = "0.2.1"
 futures-lite = "1.13.0"
 strum = { version = "0.25.0" }
-strum_macros = "0.24.3"
+strum_macros = "0.25.2"
 log = "0.4.18"
 
 [dev-dependencies]
